@@ -2,8 +2,7 @@ name: Selenium Hangfire Status Job
 
 on:
   push:
-    paths:
-      - '.github/workflows/selenium-hangfire-status.yml'
+  
   schedule:
     - cron: "30 3 * * *"   # Runs every day at 9:00 IST (3:30 UTC)
   workflow_dispatch:        # Manual trigger
