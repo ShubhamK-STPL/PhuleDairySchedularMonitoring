@@ -2,7 +2,8 @@
 <suite name="PhuleDairy Suite">
     <test name="Phule Dairy Job Status">
         <classes>
-            <class name="org.example.PhuleDairyJobStatus"/>
+            <!-- <class name="org.example.PhuleDairyJobStatus"/> -->
+            <class name="org.example.PhuleDairyJobStatusMD"/>
         </classes>
     </test>
 </suite>
