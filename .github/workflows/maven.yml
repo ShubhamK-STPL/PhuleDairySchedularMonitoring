@@ -50,7 +50,7 @@ jobs:
             echo "❌ Tests Failed (Teams notification will still be sent)"
           fi
           echo "ℹ️ Running PhuleDairyJobStatus to send Teams update..."
-          mvn -Dtest=PhuleDairyJobStatus test
+          mvn -Dtest=PhuleDairyJobStatusMD test
           exit $RESULT   # Keep test status as final exit code
 
     env:
