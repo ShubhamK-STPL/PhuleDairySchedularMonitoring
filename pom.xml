@@ -12,56 +12,41 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.showDeprecation>true</maven.compiler.showDeprecation>
     </properties>
-
     <dependencies>
-        <!-- ✅ Selenium with matching DevTools -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
             <version>4.21.0</version>
         </dependency>
         <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-devtools-v138</artifactId>
-            <version>4.21.0</version>
-        </dependency>
-
-        <!-- ✅ Updated Apache HttpClient -->
-        <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
-            <version>5.3.1</version>
+            <version>5.2</version>
         </dependency>
-
-        <!-- ✅ JSON Handling -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>2.16.0</version>
         </dependency>
-
-        <!-- ✅ WebDriver Manager -->
         <dependency>
             <groupId>io.github.bonigarcia</groupId>
             <artifactId>webdrivermanager</artifactId>
             <version>5.9.2</version>
         </dependency>
+            <!-- Jakarta Mail (successor of JavaMail) -->
+            <dependency>
+                <groupId>com.sun.mail</groupId>
+                <artifactId>jakarta.mail</artifactId>
+                <version>2.0.1</version>
+            </dependency>
 
-        <!-- ✅ Mail Dependencies -->
-        <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>jakarta.mail</artifactId>
-            <version>2.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.activation</groupId>
-            <artifactId>jakarta.activation</artifactId>
-            <version>2.0.1</version>
-        </dependency>
-
-        <!-- ✅ TestNG -->
+            <!-- Jakarta Activation (replacement for javax.activation) -->
+            <dependency>
+                <groupId>com.sun.activation</groupId>
+                <artifactId>jakarta.activation</artifactId>
+                <version>2.0.1</version>
+            </dependency>
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
@@ -69,12 +54,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- ✅ SLF4J backend to remove warning -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>2.0.7</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
+
+
 </project>
