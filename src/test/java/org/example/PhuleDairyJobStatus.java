@@ -9,14 +9,16 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.testng.annotations.Test;
+
 import java.util.*;
 
 public class PhuleDairyJobStatus {
-@Test
-public void sendHangfireJobStatusToTeams() throws Exception {
-    // 🔹 Load secrets from config.properties
-    String TEAMS_WEBHOOK_URL = ConfigLoader.get("TEAMS_WEBHOOK_URL");
-    String HANGFIRE_URL = ConfigLoader.get("HANGFIRE_URL");
+
+    @Test
+    public void sendHangfireJobStatusToTeams() throws Exception {
+        // 🔹 Load secrets from config.properties
+        String TEAMS_WEBHOOK_URL = ConfigLoader.get("TEAMS_WEBHOOK_URL");
+        String HANGFIRE_URL = ConfigLoader.get("HANGFIRE_URL");
 
         System.out.println("🚀 Starting job status extraction from: " + HANGFIRE_URL);
 
@@ -51,15 +53,12 @@ public void sendHangfireJobStatusToTeams() throws Exception {
                 "Call-NotificationBeforeComplete"
         };
 
-        // ✅ Build Markdown Table for Teams
-        StringBuilder message = new StringBuilder();
-        message.append("### ✅ Hangfire Scheduler Job Status\n");
-        message.append("Below is the latest job status report:\n\n");
-        message.append("| Job ID | Cron | Next Execution | Last Execution | Status |\n");
-        message.append("|--------|------|----------------|----------------|--------|\n");
+        // ✅ Build Facts for Teams Adaptive Card
+        List<String> factsJson = new ArrayList<>();
+        boolean hasIssue = false;
 
         for (String jobId : jobIds) {
-            String cron = "N/A", nextExec = "N/A", lastExec = "N/A", statusIcon = "⚪", status = "Unknown ";
+            String cron = "N/A", nextExec = "N/A", lastExec = "N/A", statusIcon = "⚪", status = "Unknown";
 
             if (jobData.containsKey(jobId)) {
                 String[] details = jobData.get(jobId);
@@ -70,35 +69,54 @@ public void sendHangfireJobStatusToTeams() throws Exception {
                 // ✅ Determine Status
                 if (nextExec.equalsIgnoreCase("N/A")) {
                     statusIcon = "⚪"; status = "No Schedule";
+                    hasIssue = true;
                 } else if (nextExec.toLowerCase().contains("in") || nextExec.toLowerCase().contains("minutes")) {
                     statusIcon = "🟢"; status = "Scheduled";
                 } else if (nextExec.toLowerCase().contains("ago")) {
                     statusIcon = "🟡"; status = "Recently Executed";
                 } else {
                     statusIcon = "🔴"; status = "Issue";
+                    hasIssue = true;
                 }
+            } else {
+                hasIssue = true;
             }
 
-            message.append("| `").append(jobId).append("` | `").append(cron).append("` | ")
-                    .append(nextExec).append(" | ").append(lastExec).append(" | ")
-                    .append(statusIcon).append(" ").append(status).append(" |\n");
+            // ✅ Add each job as a fact (Teams key-value)
+            factsJson.add("{\"name\": \"" + statusIcon + " " + jobId + "\", " +
+                          "\"value\": \"Cron: " + cron + "\\nNext: " + nextExec + "\\nLast: " + lastExec + "\\nStatus: " + status + "\"}");
         }
 
-        // ✅ Send to Teams Webhook
-        sendToTeams(TEAMS_WEBHOOK_URL, message.toString());
+        // ✅ Set dynamic theme color (Green if all OK, Red if any issue)
+        String themeColor = hasIssue ? "FF0000" : "00CC00";
+
+        // ✅ Build MessageCard JSON
+        String payload = "{"
+                + "\"@type\": \"MessageCard\","
+                + "\"@context\": \"https://schema.org/extensions\","
+                + "\"themeColor\": \"" + themeColor + "\","
+                + "\"summary\": \"Hangfire Job Status\","
+                + "\"sections\": [{"
+                + "\"activityTitle\": \"🚀 Hangfire Scheduler Job Status\","
+                + "\"facts\": [" + String.join(",", factsJson) + "],"
+                + "\"markdown\": true"
+                + "}]"
+                + "}";
+
+        // ✅ Send Notification to Teams
+        sendToTeams(TEAMS_WEBHOOK_URL, payload);
     }
 
     // ---------------- SEND TO TEAMS ----------------
-    public static void sendToTeams(String webhookUrl, String message) {
+    public static void sendToTeams(String webhookUrl, String payload) {
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             HttpPost post = new HttpPost(webhookUrl);
             post.setHeader("Content-Type", "application/json");
-            String payload = "{ \"text\": \"" + message.replace("\"", "\\\"").replace("\n", "\\n") + "\" }";
-            post.setEntity(new StringEntity(payload));
+            post.setEntity(new StringEntity(payload, "UTF-8"));
             client.execute(post);
-            System.out.println("✅ Message sent to Teams successfully!");
+            System.out.println("✅ Teams notification sent successfully!");
         } catch (Exception e) {
-            System.out.println("❌ Failed to send message: " + e.getMessage());
+            System.out.println("❌ Failed to send Teams notification: " + e.getMessage());
             e.printStackTrace();
         }
     }
