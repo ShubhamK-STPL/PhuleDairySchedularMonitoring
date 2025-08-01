@@ -59,7 +59,7 @@ public void sendHangfireJobStatusToTeams() throws Exception {
         message.append("|--------|------|----------------|----------------|--------|\n");
 
         for (String jobId : jobIds) {
-            String cron = "N/A", nextExec = "N/A", lastExec = "N/A", statusIcon = "⚪", status = "Unknown";
+            String cron = "N/A", nextExec = "N/A", lastExec = "N/A", statusIcon = "⚪", status = "Unknown ";
 
             if (jobData.containsKey(jobId)) {
                 String[] details = jobData.get(jobId);
