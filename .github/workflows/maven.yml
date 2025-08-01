@@ -1,11 +1,10 @@
 name: Selenium Hangfire Status Job
 
 on:
-  push:
-  
+  push:                     # Runs when any file changes
   schedule:
-    - cron: "30 3 * * *"   # Runs every day at 9:00 IST (3:30 UTC)
-  workflow_dispatch:        # Manual trigger
+    - cron: "30 3 * * *"    # Runs every day at 9:00 IST (3:30 UTC)
+  workflow_dispatch:        # Allows manual trigger
 
 jobs:
   run-tests:
@@ -49,12 +48,26 @@ jobs:
           fi
           exit $RESULT
 
-      # Get Hangfire Job Status (Example: Using cURL to call your API)
+      # Get Hangfire Job Status with Error Handling
       - name: Get Hangfire Job Status
         id: hangfire
         run: |
-          STATUS=$(curl -s $HANGFIRE_URL | jq -r '.status // "Unknown"')
-          echo "hangfire_status=$STATUS" >> $GITHUB_OUTPUT
+          echo "Fetching Hangfire Job Status from: $HANGFIRE_URL"
+          RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" $HANGFIRE_URL)
+          HTTP_CODE=$(echo "$RESPONSE" | sed -n 's/.*HTTP_CODE://p')
+          BODY=$(echo "$RESPONSE" | sed 's/HTTP_CODE:.*//')
+
+          echo "HTTP Status Code: $HTTP_CODE"
+          echo "API Raw Response: $BODY"
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "hangfire_status=API Error (HTTP $HTTP_CODE)" >> $GITHUB_OUTPUT
+          elif echo "$BODY" | jq . >/dev/null 2>&1; then
+            STATUS=$(echo "$BODY" | jq -r '.status // "Unknown"')
+            echo "hangfire_status=$STATUS" >> $GITHUB_OUTPUT
+          else
+            echo "hangfire_status=Invalid API Response" >> $GITHUB_OUTPUT
+          fi
 
       # Send Notification to Microsoft Teams
       - name: Send Notification to Teams
@@ -76,6 +89,7 @@ jobs:
             }]
           }"
 
+          echo "Sending notification to Teams..."
           curl -H "Content-Type: application/json" \
                -d "$MESSAGE" \
                $TEAMS_WEBHOOK_URL
