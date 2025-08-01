@@ -8,6 +8,7 @@ import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.ContentType;
 import org.testng.annotations.Test;
 
 import java.util.*;
@@ -29,7 +30,7 @@ public class PhuleDairyJobStatus {
         WebDriver driver = new ChromeDriver(options);
         driver.get(HANGFIRE_URL);
 
-        // ✅ Extract Job Data
+        // ✅ Extract Job Data from Hangfire Table
         Map<String, String[]> jobData = new HashMap<>();
         List<WebElement> rows = driver.findElements(By.cssSelector("table tbody tr"));
 
@@ -66,7 +67,7 @@ public class PhuleDairyJobStatus {
                 nextExec = details[1];
                 lastExec = details[2];
 
-                // ✅ Determine Status
+                // ✅ Determine Status and Emoji
                 if (nextExec.equalsIgnoreCase("N/A")) {
                     statusIcon = "⚪"; status = "No Schedule";
                     hasIssue = true;
@@ -82,15 +83,15 @@ public class PhuleDairyJobStatus {
                 hasIssue = true;
             }
 
-            // ✅ Add each job as a fact (Teams key-value)
+            // ✅ Add each job as a fact for Teams
             factsJson.add("{\"name\": \"" + statusIcon + " " + jobId + "\", " +
                           "\"value\": \"Cron: " + cron + "\\nNext: " + nextExec + "\\nLast: " + lastExec + "\\nStatus: " + status + "\"}");
         }
 
-        // ✅ Set dynamic theme color (Green if all OK, Red if any issue)
+        // ✅ Dynamic Theme Color
         String themeColor = hasIssue ? "FF0000" : "00CC00";
 
-        // ✅ Build MessageCard JSON
+        // ✅ Build Adaptive Card Payload
         String payload = "{"
                 + "\"@type\": \"MessageCard\","
                 + "\"@context\": \"https://schema.org/extensions\","
@@ -103,7 +104,7 @@ public class PhuleDairyJobStatus {
                 + "}]"
                 + "}";
 
-        // ✅ Send Notification to Teams
+        // ✅ Send to Teams
         sendToTeams(TEAMS_WEBHOOK_URL, payload);
     }
 
@@ -112,7 +113,7 @@ public class PhuleDairyJobStatus {
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             HttpPost post = new HttpPost(webhookUrl);
             post.setHeader("Content-Type", "application/json");
-            post.setEntity(new StringEntity(payload, "UTF-8"));
+            post.setEntity(new StringEntity(payload, ContentType.APPLICATION_JSON));
             client.execute(post);
             System.out.println("✅ Teams notification sent successfully!");
         } catch (Exception e) {
