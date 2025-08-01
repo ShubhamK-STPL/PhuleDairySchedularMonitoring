@@ -1,0 +1,8 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="PhuleDairy Suite">
+    <test name="Phule Dairy Job Status">
+        <classes>
+            <class name="org.example.PhuleDairyJobStatus"/>
+        </classes>
+    </test>
+</suite>
