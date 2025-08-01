@@ -1,28 +1,31 @@
 name: Selenium Hangfire Status Job
 
 on:
-  push:                     # Runs when any file changes
+  push:                     # ✅ Trigger when any file changes
+    branches:
+      - main
   schedule:
-    - cron: "30 3 * * *"    # Runs every day at 9:00 IST (3:30 UTC)
-  workflow_dispatch:        # Allows manual trigger
+    - cron: "30 3 * * *"    # ✅ Runs every day at 9:00 IST (3:30 UTC)
+  workflow_dispatch:        # ✅ Manual trigger option
 
 jobs:
   run-tests:
     runs-on: ubuntu-latest
-
+    outputs:
+      test_status: ${{ steps.tests.outputs.test_status }}
     steps:
-      # Checkout code
+      # ✅ Checkout code
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # Set up Java 17
+      # ✅ Set up Java 17
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Cache Maven Dependencies
+      # ✅ Cache Maven Dependencies
       - name: Cache Maven Dependencies
         uses: actions/cache@v3
         with:
@@ -30,11 +33,11 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-maven
 
-      # Install Google Chrome for Selenium tests
+      # ✅ Install Google Chrome for Selenium tests
       - name: Install Google Chrome
         uses: browser-actions/setup-chrome@v1
 
-      # Run Selenium Tests
+      # ✅ Run Selenium Tests (PhuleDairyJobStatus will send Teams notification)
       - name: Run Tests with Maven
         id: tests
         run: |
@@ -48,51 +51,37 @@ jobs:
           fi
           exit $RESULT
 
-      # Get Hangfire Job Status with Error Handling
-      - name: Get Hangfire Job Status
-        id: hangfire
-        run: |
-          echo "Fetching Hangfire Job Status from: $HANGFIRE_URL"
-          RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" $HANGFIRE_URL)
-          HTTP_CODE=$(echo "$RESPONSE" | sed -n 's/.*HTTP_CODE://p')
-          BODY=$(echo "$RESPONSE" | sed 's/HTTP_CODE:.*//')
+    env:
+      TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+      HANGFIRE_URL: ${{ secrets.HANGFIRE_URL }}
 
-          echo "HTTP Status Code: $HTTP_CODE"
-          echo "API Raw Response: $BODY"
+  # ✅ Separate Job to Check Hangfire Status and Send Teams Notification
+  check-hangfire-and-notify:
+    runs-on: ubuntu-latest
+    needs: run-tests
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-          if [ "$HTTP_CODE" -ne 200 ]; then
-            echo "hangfire_status=API Error (HTTP $HTTP_CODE)" >> $GITHUB_OUTPUT
-          elif echo "$BODY" | jq . >/dev/null 2>&1; then
-            STATUS=$(echo "$BODY" | jq -r '.status // "Unknown"')
-            echo "hangfire_status=$STATUS" >> $GITHUB_OUTPUT
-          else
-            echo "hangfire_status=Invalid API Response" >> $GITHUB_OUTPUT
-          fi
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-      # Send Notification to Microsoft Teams
-      - name: Send Notification to Teams
-        run: |
-          JOB_STATUS="${{ steps.hangfire.outputs.hangfire_status }}"
-          TEST_STATUS="${{ steps.tests.outputs.test_status }}"
-          MESSAGE="{
-            \"@type\": \"MessageCard\",
-            \"@context\": \"https://schema.org/extensions\",
-            \"themeColor\": \"0076D7\",
-            \"summary\": \"Hangfire Job Status Report\",
-            \"sections\": [{
-              \"activityTitle\": \"🚀 Selenium Hangfire Status\",
-              \"facts\": [
-                {\"name\": \"Hangfire Job Status\", \"value\": \"$JOB_STATUS\"},
-                {\"name\": \"Test Execution\", \"value\": \"$TEST_STATUS\"}
-              ],
-              \"markdown\": true
-            }]
-          }"
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven
 
-          echo "Sending notification to Teams..."
-          curl -H "Content-Type: application/json" \
-               -d "$MESSAGE" \
-               $TEAMS_WEBHOOK_URL
+      - name: Install Google Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      # ✅ Execute only Teams Notification Part (re-run test class if needed)
+      - name: Send Hangfire Job Status to Teams
+        run: mvn -Dtest=PhuleDairyJobStatus test
 
     env:
       TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
