@@ -9,8 +9,10 @@ on:
   schedule:
     # ✅ First run at 12:30 AM IST (19:00 UTC previous day)
     - cron: "30 19 * * *"
-    # ✅ Every hour from 1:30 AM IST to 11:30 PM IST
-    - cron: "30 20-18/1 * * *"
+    # ✅ Runs hourly from 1:30 AM IST to 11:30 AM IST
+    - cron: "30 20-6/1 * * *"
+    # ✅ Runs hourly from 12:30 PM IST to 11:30 PM IST
+    - cron: "30 7-18/1 * * *"
   workflow_dispatch:
 
 jobs:
