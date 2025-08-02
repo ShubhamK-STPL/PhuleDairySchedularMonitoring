@@ -78,7 +78,8 @@ public class PhuleDairyJobStatusMD {
                 if (nextExec.equalsIgnoreCase("N/A")) {
                         statusIcon = "🔴"; status = "No Schedule"; hasIssue = true;
                     } else if (lastExec.equalsIgnoreCase("N/A")) {
-                        statusIcon = "⚪"; status = "Scheduled (Never Executed)";
+                        statusIcon = "🔴"; status = "Scheduled (Never Executed)";
+                        // statusIcon = "⚪"; status = "Scheduled (Never Executed)";
                     } else if (nextExec.toLowerCase().contains("in") || nextExec.toLowerCase().contains("minutes")) {
                         statusIcon = "🟢"; status = "Scheduled";
                     } else if (nextExec.toLowerCase().contains("ago")) {
