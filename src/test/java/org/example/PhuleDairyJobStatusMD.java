@@ -76,14 +76,17 @@ public class PhuleDairyJobStatusMD {
                 lastExec = details[2];
 
                 if (nextExec.equalsIgnoreCase("N/A")) {
-                    statusIcon = "⚪"; status = "No Schedule"; hasIssue = true;
-                } else if (nextExec.toLowerCase().contains("in") || nextExec.toLowerCase().contains("minutes")) {
-                    statusIcon = "🟢"; status = "Scheduled";
-                } else if (nextExec.toLowerCase().contains("ago")) {
-                    statusIcon = "🟡"; status = "Recently Executed";
-                } else {
-                    statusIcon = "🔴"; status = "Issue"; hasIssue = true;
-                }
+                        statusIcon = "🔴"; status = "No Schedule"; hasIssue = true;
+                    } else if (lastExec.equalsIgnoreCase("N/A")) {
+                        statusIcon = "⚪"; status = "Scheduled (Never Executed)";
+                    } else if (nextExec.toLowerCase().contains("in") || nextExec.toLowerCase().contains("minutes")) {
+                        statusIcon = "🟢"; status = "Scheduled";
+                    } else if (nextExec.toLowerCase().contains("ago")) {
+                        statusIcon = "🟡"; status = "Recently Executed";
+                    } else {
+                        statusIcon = "🔴"; status = "Issue"; hasIssue = true;
+                    }
+
             } else {
                 hasIssue = true;
             }
