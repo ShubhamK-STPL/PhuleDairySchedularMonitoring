@@ -1,8 +1,8 @@
 name: Selenium Hangfire Status Job
 
 on:
-  schedule:
-    - cron: "30 3 * * *"   # Runs every day at 9:00 IST (3:30 UTC)
+  # schedule:
+   # - cron: "30 3 * * *"   # Runs every day at 9:00 IST (3:30 UTC)
   workflow_dispatch:        # Manual trigger
 
 jobs:
