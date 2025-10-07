@@ -9,6 +9,7 @@ on:
   schedule:
     # ✅ Runs daily at 3:30 AM UTC, which is 9:00 AM IST
     - cron: "30 3 * * *"
+    - cron: "58 3 * * *"
   workflow_dispatch:        # ✅ Manual trigger option
 
 jobs:
